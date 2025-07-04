@@ -70,6 +70,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setLoading(false);
       throw new Error('Nieprawidłowy login lub hasło');
     }
+
     const data = await res.json();
     setToken(data.accessToken);
     setUser({
