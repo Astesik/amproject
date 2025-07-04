@@ -43,28 +43,25 @@ export default function DocumentsScreen() {
     fetchDocuments();
   }, [id, token]);
 
-  // POBIERANIE PLIKU DO URZĄDZENIA
   const downloadDocument = async (doc: any) => {
     if (!token) {
       Alert.alert('Błąd', 'Brak autoryzacji, zaloguj się ponownie.');
       return;
     }
 
-    // Wyciągnij rozszerzenie z contentType
     let ext = '';
     if (doc.contentType?.includes('pdf')) ext = 'pdf';
     else if (doc.contentType?.includes('jpeg')) ext = 'jpg';
     else if (doc.contentType?.includes('png')) ext = 'png';
     else ext = 'dat';
 
-    // Spróbuj wziąć nazwę z oryginału, jeśli jest rozszerzenie w nazwie, nie doklejaj go drugi raz
     let fileName = doc.originalFilename || `dokument_${doc.id}.${ext}`;
     if (!fileName.endsWith(`.${ext}`)) fileName += `.${ext}`;
-    // Ustal ścieżkę tymczasową
+
     const fileUri = FileSystem.cacheDirectory + fileName;
 
     try {
-      // POBIERZ DO PLIKÓW TYMCZASOWYCH
+
       const downloadRes = await FileSystem.downloadAsync(
         `http://192.168.50.105:8080/api/documents/download/${doc.id}`,
         fileUri,
@@ -74,19 +71,16 @@ export default function DocumentsScreen() {
           },
         }
       );
-      // ZAPYTAJ O UPRAWNIENIA DO GALERII/PLIKÓW
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Brak uprawnień', 'Aplikacja nie ma dostępu do plików/zdjęć.');
         return;
       }
-      // ZAPISZ DO GALERII (w iOS "Pliki", w Android "Pobrane" lub "Zdjęcia")
       const asset = await MediaLibrary.createAssetAsync(downloadRes.uri);
       // Jeśli album nie istnieje, utworzy się nowy
       await MediaLibrary.createAlbumAsync('PobraneDokumenty', asset, false);
       Alert.alert('Sukces', `Dokument został pobrany do urządzenia jako ${fileName}.`);
     } catch (e: any) {
-      // Android/Expo Go – PDFy mogą NIE działać (błąd tworzenia assetu)
       if (Platform.OS === 'android' && doc.contentType?.includes('pdf')) {
         Alert.alert('Expo Go/Ograniczenie systemu',
           'Nie można pobrać PDF w Expo Go. Zbuduj apkę przez EAS Build, wtedy wszystko zadziała.');

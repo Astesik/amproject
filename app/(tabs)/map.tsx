@@ -59,7 +59,6 @@ export default function MapScreen() {
     longitudeDelta: 4,
   });
 
-  // --- ZAWSZE ŚWIEŻA LOKALIZACJA, nie last known! ---
   useEffect(() => {
     let watcher: Location.LocationSubscription | null = null;
 
@@ -68,11 +67,9 @@ export default function MapScreen() {
       setLocationPermission(status);
 
       if (status === 'granted') {
-        // NAJPIERW WYMUSZAMY ŚWIEŻY FIX (może chwilę potrwać!)
         const freshLoc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Highest });
         setLocation(freshLoc);
 
-        // Potem rejestrujemy na żywo tracker (ciągle świeże pozycje)
         watcher = await Location.watchPositionAsync(
           {
             accuracy: Location.Accuracy.Highest,
@@ -91,9 +88,8 @@ export default function MapScreen() {
       }
     };
   }, []);
-  // --- END: ZAWSZE ŚWIEŻA LOKALIZACJA ---
 
-  // Funkcja: marker widoczny na mapie?
+
   const isMarkerVisible = useCallback(
     (marker: any) => {
       if (!marker.latitude || !marker.longitude) return false;
@@ -130,7 +126,7 @@ export default function MapScreen() {
     } else if (drawer === 'vehicle') {
       setGroupDrawerVisible(false);
       Animated.timing(vehicleDrawerAnim, {
-        toValue: open ? 0 : -DRAWER_WIDTH, // z lewej, nie z prawej!
+        toValue: open ? 0 : -DRAWER_WIDTH,
         duration: 250,
         useNativeDriver: false,
       }).start(() => setVehicleDrawerVisible(open));
@@ -335,7 +331,7 @@ export default function MapScreen() {
           </Drawer.Section>
         </Animated.View>
 
-        {/* Vehicle Drawer (też z lewej!) */}
+        {/* Vehicle Drawer */}
         {vehicleDrawerVisible && (
           <TouchableOpacity
             style={StyleSheet.absoluteFillObject}
@@ -485,7 +481,7 @@ export default function MapScreen() {
   );
 }
 
-// Funkcja stylów (przekazuj theme, nie jako stała!)
+// Funkcja stylów
 const styles = (theme: any) => StyleSheet.create({
   bottomButtonsContainer: {
     position: 'absolute',

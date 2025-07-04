@@ -51,7 +51,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     if (!jwt) return false;
     try {
       const payload = decodeJwt(jwt);
-      if (!payload.exp) return true; // Brak exp - uznajemy za ważny
+      if (!payload.exp) return true;
       const now = Date.now() / 1000;
       return payload.exp > now;
     } catch {
