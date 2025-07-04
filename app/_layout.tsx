@@ -1,29 +1,60 @@
-import { DarkTheme, DefaultTheme, ThemeProvider } from '@react-navigation/native';
-import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
-import { StatusBar } from 'expo-status-bar';
-import 'react-native-reanimated';
+import React from 'react';
+import { Slot, useSegments, useRouter } from 'expo-router';
+import { useAuth } from '../context/AuthContext';
+import { ActivityIndicator } from 'react-native-paper';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { ThemeProvider } from '../context/ThemeContext';
+import { AuthProvider } from '../context/AuthContext';
+import { BiometricGate } from '../components/BiometricGate'
 
-import { useColorScheme } from '@/hooks/useColorScheme';
+function AppContent() {
+  const { token, loading, isTokenValid } = useAuth();
+  const segments = useSegments();
+  const router = useRouter();
 
-export default function RootLayout() {
-  const colorScheme = useColorScheme();
-  const [loaded] = useFonts({
-    SpaceMono: require('../assets/fonts/SpaceMono-Regular.ttf'),
-  });
+  React.useEffect(() => {
+    // Jeśli nie ma tokenu, kieruj na login, nawet jak user wpisze ręcznie adres tabsów!
+    if (!loading) {
+      if (!token || !isTokenValid(token)) {
+        if (segments[0] !== '(auth)') {
+          router.replace('/(auth)/login');
+        }
+      } else {
+        // Token ważny → jak user jest na loginie, to przenieś do tabsów
+        if (segments[0] === '(auth)') {
+          router.replace('/(tabs)/dashboard');
+        }
+      }
+    }
+  }, [token, loading, segments]);
 
-  if (!loaded) {
-    // Async font loading only occurs in development.
+  if (loading) return <ActivityIndicator style={{ marginTop: 60 }} />;
+
+  // Jeżeli nie ma tokenu, renderuj tylko login!
+  if (!token || !isTokenValid(token)) {
+    if (segments[0] === '(auth)') {
+      return <Slot />;
+    }
+    // Jeśli user na innej ścieżce (ręcznie), to i tak przenieśliśmy go na login wyżej!
     return null;
   }
 
+  // Token jest — bramka biometryczna przed całym Slotem
   return (
-    <ThemeProvider value={colorScheme === 'dark' ? DarkTheme : DefaultTheme}>
-      <Stack>
-        <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
-        <Stack.Screen name="+not-found" />
-      </Stack>
-      <StatusBar style="auto" />
-    </ThemeProvider>
+    <BiometricGate>
+      <Slot />
+    </BiometricGate>
+  );
+}
+
+export default function RootLayout() {
+  return (
+    <SafeAreaProvider>
+      <ThemeProvider>
+        <AuthProvider>
+          <AppContent />
+        </AuthProvider>
+      </ThemeProvider>
+    </SafeAreaProvider>
   );
 }
