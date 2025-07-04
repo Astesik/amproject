@@ -105,7 +105,7 @@ export default function VehicleDetailsScreen() {
   );
 }
 
-// Funkcja styles zależna od theme!
+// Funkcja styles zależna od theme
 const styles = (theme: any) => ({
   label: {
     color: theme.colors.onSurfaceVariant,

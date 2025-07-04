@@ -13,14 +13,12 @@ function AppContent() {
   const router = useRouter();
 
   React.useEffect(() => {
-    // Jeśli nie ma tokenu, kieruj na login, nawet jak user wpisze ręcznie adres tabsów!
     if (!loading) {
       if (!token || !isTokenValid(token)) {
         if (segments[0] !== '(auth)') {
           router.replace('/(auth)/login');
         }
       } else {
-        // Token ważny → jak user jest na loginie, to przenieś do tabsów
         if (segments[0] === '(auth)') {
           router.replace('/(tabs)/dashboard');
         }
@@ -30,16 +28,13 @@ function AppContent() {
 
   if (loading) return <ActivityIndicator style={{ marginTop: 60 }} />;
 
-  // Jeżeli nie ma tokenu, renderuj tylko login!
   if (!token || !isTokenValid(token)) {
     if (segments[0] === '(auth)') {
       return <Slot />;
     }
-    // Jeśli user na innej ścieżce (ręcznie), to i tak przenieśliśmy go na login wyżej!
     return null;
   }
 
-  // Token jest — bramka biometryczna przed całym Slotem
   return (
     <BiometricGate>
       <Slot />
