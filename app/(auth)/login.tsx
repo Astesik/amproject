@@ -119,7 +119,7 @@ export default function LoginScreen() {
               Zaloguj
             </Button>
             <Text style={[styles.tip, { color: theme.colors.onSurfaceVariant }]}>
-              Nie masz konta? Skontaktuj się z administratorem.
+              Nie masz konta? Skontaktuj się z administratorem
             </Text>
           </Card.Content>
         </Card>
