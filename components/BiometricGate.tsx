@@ -11,14 +11,13 @@ export function BiometricGate({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     (async () => {
-      // Jeśli token wygasł → wyloguj od razu!
       if (!isTokenValid(token)) {
         logout();
         setAllowed(false);
         setLoading(false);
         return;
       }
-      // Czy biometria włączona? (AsyncStorage na device, możesz użyć SecureStore jeśli chcesz)
+      // Sprawdzamy czy biometria jest włączona
       const bio = await AsyncStorage.getItem('biometric-enabled');
       if (bio === '1') {
         const res = await authenticateAsync();
