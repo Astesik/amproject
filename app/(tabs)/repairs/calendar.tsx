@@ -14,7 +14,6 @@ export default function RepairsCalendarScreen() {
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [repairsByDay, setRepairsByDay] = useState<{ [date: string]: any[] }>({});
 
-  // Odświeżanie na wejście na ekran
   useFocusEffect(
     React.useCallback(() => {
       const fetchCalendar = async () => {
@@ -24,7 +23,6 @@ export default function RepairsCalendarScreen() {
           const data = await res.json();
           const allRepairs: any[] = data.flatMap((group: any) => group.repairs);
 
-          // Mapa: { [date]: [repairs, ...] }
           const repairsMap: { [date: string]: any[] } = {};
           for (const r of allRepairs) {
             if (r.plannedDate) {
@@ -56,7 +54,6 @@ export default function RepairsCalendarScreen() {
     return acc;
   }, {} as any);
 
-  // Dodanie wydarzenia do natywnego kalendarza
   async function addRepairToCalendar(repair: any) {
     try {
       const { status } = await ExpoCalendar.requestCalendarPermissionsAsync();

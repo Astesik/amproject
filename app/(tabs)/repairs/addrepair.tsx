@@ -181,64 +181,182 @@ export default function AddRepair() {
       </ScrollView>
 
       <Portal>
-        <Dialog visible={vehicleDialog} onDismiss={() => setVehicleDialog(false)}>
-          <Dialog.Title>Wybierz pojazd</Dialog.Title>
+        <Dialog
+          visible={vehicleDialog}
+          onDismiss={() => setVehicleDialog(false)}
+          style={{
+            borderRadius: 20,
+            backgroundColor: theme.colors.surface,
+            marginHorizontal: 16,
+            elevation: 6,
+          }}
+        >
+          <Dialog.Title
+            style={{
+              fontWeight: 'bold',
+              fontSize: 18,
+              color: theme.colors.primary,
+              marginBottom: 4,
+            }}
+          >
+            Wybierz pojazd
+          </Dialog.Title>
           <Dialog.ScrollArea>
-            <TextInput
-              placeholder="Szukaj pojazdu"
-              value={vehicleQuery}
-              onChangeText={setVehicleQuery}
+            <View
               style={{
-                borderRadius: 8,
-                marginBottom: 12,
-                backgroundColor: theme.colors.surface,
-                color: theme.colors.onSurface,
-                borderColor: theme.colors.outline,
-                padding: 10,
+                  marginTop: 10,
+                paddingHorizontal: 12,
+                paddingBottom: 6,
               }}
-            />
-            <ScrollView style={{ maxHeight: 300 }}>
-              {filteredVehicles.map(v => (
-                <List.Item
-                  key={v.id}
-                  title={`${v.licensePlate}`}
-                  onPress={() => {
-                    setForm({ ...form, vehicleId: v.id, vehicleName: v.licensePlate });
-                    setVehicleDialog(false);
+            >
+              <View
+                style={{
+                  borderRadius: 12,
+                  backgroundColor: theme.colors.elevation?.level2 || '#f3f3f3',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: theme.colors.outlineVariant,
+                  shadowColor: theme.colors.shadow,
+                  shadowOpacity: 0.07,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                }}
+              >
+                <List.Icon icon="car" color={theme.colors.primary} style={{ marginRight: 2, marginLeft: 4 }} />
+                <TextInput
+                  placeholder="Szukaj pojazdu"
+                  placeholderTextColor={theme.colors.onSurface + '80'}
+                  value={vehicleQuery}
+                  onChangeText={setVehicleQuery}
+                  style={{
+                    flex: 1,
+                    fontSize: 15,
+                    paddingVertical: 8,
+                    backgroundColor: 'transparent',
+                    color: theme.colors.onSurface,
+                    borderWidth: 0,
                   }}
+                  underlineColorAndroid="transparent"
                 />
-              ))}
+              </View>
+            </View>
+            <ScrollView style={{ maxHeight: 300, paddingHorizontal: 8 }}>
+              {filteredVehicles.length > 0 ? (
+                filteredVehicles.map((v) => (
+                  <List.Item
+                    key={v.id}
+                    titleStyle={{ color: theme.colors.onSurface, fontWeight: '600', fontSize: 15 }}
+                    title={`${v.licensePlate}`}
+                    style={{
+                      backgroundColor: theme.colors.elevation?.level1 || '#f7f7f7',
+                      marginVertical: 2,
+                      borderRadius: 10,
+                      paddingHorizontal: 6,
+                    }}
+                    onPress={() => {
+                      setForm({ ...form, vehicleId: v.id, vehicleName: v.licensePlate });
+                      setVehicleDialog(false);
+                    }}
+                    left={props => <List.Icon {...props} icon="car" color={theme.colors.primary} />}
+                  />
+                ))
+              ) : (
+                <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginTop: 12 }}>
+                  Brak wyników
+                </Text>
+              )}
             </ScrollView>
           </Dialog.ScrollArea>
         </Dialog>
 
-        <Dialog visible={placeDialog} onDismiss={() => setPlaceDialog(false)}>
-          <Dialog.Title>Wybierz miejsce</Dialog.Title>
+        <Dialog
+          visible={placeDialog}
+          onDismiss={() => setPlaceDialog(false)}
+          style={{
+            borderRadius: 20,
+            backgroundColor: theme.colors.surface,
+            marginHorizontal: 16,
+            elevation: 6,
+          }}
+        >
+          <Dialog.Title
+            style={{
+              fontWeight: 'bold',
+              fontSize: 18,
+              color: theme.colors.primary,
+              marginBottom: 4,
+            }}
+          >
+            Wybierz miejsce
+          </Dialog.Title>
           <Dialog.ScrollArea>
-            <TextInput
-              placeholder="Szukaj miejsca"
-              value={placeQuery}
-              onChangeText={setPlaceQuery}
+            <View
               style={{
-                borderRadius: 8,
-                marginBottom: 12,
-                backgroundColor: theme.colors.surface,
-                color: theme.colors.onSurface,
-                borderColor: theme.colors.outline,
-                padding: 10,
+                  marginTop: 10,
+                paddingHorizontal: 12,
+                paddingBottom: 6,
               }}
-            />
-            <ScrollView style={{ maxHeight: 300 }}>
-              {filteredPlaces.map(p => (
-                <List.Item
-                  key={p.id}
-                  title={`${p.name}`}
-                  onPress={() => {
-                    setForm({ ...form, placeId: p.id, placeName: p.name });
-                    setPlaceDialog(false);
+            >
+              <View
+                style={{
+                  borderRadius: 12,
+                  backgroundColor: theme.colors.elevation?.level2 || '#f3f3f3',
+                  flexDirection: 'row',
+                  alignItems: 'center',
+                  marginBottom: 12,
+                  borderWidth: 1,
+                  borderColor: theme.colors.outlineVariant,
+                  shadowColor: theme.colors.shadow,
+                  shadowOpacity: 0.07,
+                  shadowOffset: { width: 0, height: 2 },
+                  elevation: 2,
+                }}
+              >
+                <List.Icon icon="map-marker" color={theme.colors.primary} style={{ marginRight: 2, marginLeft: 4 }} />
+                <TextInput
+                  placeholder="Szukaj miejsca"
+                  placeholderTextColor={theme.colors.onSurface + '80'}
+                  value={placeQuery}
+                  onChangeText={setPlaceQuery}
+                  style={{
+                    flex: 1,
+                    fontSize: 15,
+                    paddingVertical: 8,
+                    backgroundColor: 'transparent',
+                    color: theme.colors.onSurface,
+                    borderWidth: 0,
                   }}
+                  underlineColorAndroid="transparent"
                 />
-              ))}
+              </View>
+            </View>
+            <ScrollView style={{ maxHeight: 300, paddingHorizontal: 8 }}>
+              {filteredPlaces.length > 0 ? (
+                filteredPlaces.map((p) => (
+                  <List.Item
+                    key={p.id}
+                    titleStyle={{ color: theme.colors.onSurface, fontWeight: '600', fontSize: 15 }}
+                    title={`${p.name}`}
+                    style={{
+                      backgroundColor: theme.colors.elevation?.level1 || '#f7f7f7',
+                      marginVertical: 2,
+                      borderRadius: 10,
+                      paddingHorizontal: 6,
+                    }}
+                    onPress={() => {
+                      setForm({ ...form, placeId: p.id, placeName: p.name });
+                      setPlaceDialog(false);
+                    }}
+                    left={props => <List.Icon {...props} icon="map-marker" color={theme.colors.primary} />}
+                  />
+                ))
+              ) : (
+                <Text style={{ color: theme.colors.onSurfaceVariant, textAlign: 'center', marginTop: 12 }}>
+                  Brak wyników
+                </Text>
+              )}
             </ScrollView>
           </Dialog.ScrollArea>
         </Dialog>
