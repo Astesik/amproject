@@ -12,6 +12,8 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import * as FileSystem from 'expo-file-system';
 import * as MediaLibrary from 'expo-media-library';
+import * as DocumentPicker from 'expo-document-picker';
+import * as ImagePicker from 'expo-image-picker';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 type DocumentType = 'REGISTRATION' | 'PHOTO' | 'EMISSION_CERTIFICATE';
@@ -43,28 +45,22 @@ export default function DocumentsScreen() {
     fetchDocuments();
   }, [id, token]);
 
-  // POBIERANIE PLIKU DO URZĄDZENIA
   const downloadDocument = async (doc: any) => {
     if (!token) {
       Alert.alert('Błąd', 'Brak autoryzacji, zaloguj się ponownie.');
       return;
     }
 
-    // Wyciągnij rozszerzenie z contentType
     let ext = '';
     if (doc.contentType?.includes('pdf')) ext = 'pdf';
     else if (doc.contentType?.includes('jpeg')) ext = 'jpg';
     else if (doc.contentType?.includes('png')) ext = 'png';
     else ext = 'dat';
 
-    // Spróbuj wziąć nazwę z oryginału, jeśli jest rozszerzenie w nazwie, nie doklejaj go drugi raz
-    let fileName = doc.originalFilename || `dokument_${doc.id}.${ext}`;
-    if (!fileName.endsWith(`.${ext}`)) fileName += `.${ext}`;
-    // Ustal ścieżkę tymczasową
+    const fileName = `${doc.originalFilename || `dokument_${doc.id}`}.${ext}`;
     const fileUri = FileSystem.cacheDirectory + fileName;
 
     try {
-      // POBIERZ DO PLIKÓW TYMCZASOWYCH
       const downloadRes = await FileSystem.downloadAsync(
         `http://192.168.50.105:8080/api/documents/download/${doc.id}`,
         fileUri,
@@ -74,28 +70,107 @@ export default function DocumentsScreen() {
           },
         }
       );
-      // ZAPYTAJ O UPRAWNIENIA DO GALERII/PLIKÓW
       const { status } = await MediaLibrary.requestPermissionsAsync();
       if (status !== 'granted') {
         Alert.alert('Brak uprawnień', 'Aplikacja nie ma dostępu do plików/zdjęć.');
         return;
       }
-      // ZAPISZ DO GALERII (w iOS "Pliki", w Android "Pobrane" lub "Zdjęcia")
       const asset = await MediaLibrary.createAssetAsync(downloadRes.uri);
-      // Jeśli album nie istnieje, utworzy się nowy
       await MediaLibrary.createAlbumAsync('PobraneDokumenty', asset, false);
-      Alert.alert('Sukces', `Dokument został pobrany do urządzenia jako ${fileName}.`);
-    } catch (e: any) {
-      // Android/Expo Go – PDFy mogą NIE działać (błąd tworzenia assetu)
-      if (Platform.OS === 'android' && doc.contentType?.includes('pdf')) {
-        Alert.alert('Expo Go/Ograniczenie systemu',
-          'Nie można pobrać PDF w Expo Go. Zbuduj apkę przez EAS Build, wtedy wszystko zadziała.');
-      } else {
-        Alert.alert('Błąd pobierania', 'Nie udało się pobrać pliku.');
-      }
+      Alert.alert('Sukces', 'Dokument został pobrany do urządzenia.');
+    } catch (e) {
+      Alert.alert('Błąd pobierania', 'Nie udało się pobrać pliku.');
       console.log('Download error:', e);
     }
   };
+
+  async function handleUpload() {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['image/*', 'application/pdf'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled || !result.assets || result.assets.length === 0) return;
+
+      const file = result.assets[0];
+      const type = await askDocumentType();
+      if (!type) return;
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: file.uri,
+        name: file.name,
+        type: file.mimeType || 'application/octet-stream',
+      } as any);
+      formData.append('type', type);
+
+      await sendForm(formData);
+    } catch (e) {
+      console.error(e);
+    }
+  }
+
+  async function handleCameraUpload() {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (!permission.granted) {
+      Alert.alert('Brak uprawnień', 'Aby korzystać z aparatu, przyznaj uprawnienia.');
+      return;
+    }
+
+    const result = await ImagePicker.launchCameraAsync({ quality: 0.7 });
+
+    if (!result.canceled && result.assets.length > 0) {
+      const image = result.assets[0];
+      const type = await askDocumentType();
+      if (!type) return;
+
+      const formData = new FormData();
+      formData.append('file', {
+        uri: image.uri,
+        name: 'photo.jpg',
+        type: 'image/jpeg',
+      } as any);
+      formData.append('type', type);
+
+      await sendForm(formData);
+    }
+  }
+
+  async function sendForm(formData: FormData) {
+    if (!token) {
+      Alert.alert('Błąd', 'Brak autoryzacji.');
+      return;
+    }
+    const res = await fetch(`http://192.168.50.105:8080/api/documents/upload/${id}`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'multipart/form-data', Authorization: `Bearer ${token}` },
+      body: formData,
+    });
+
+    if (res.ok) {
+      Alert.alert('Sukces', 'Dokument został dodany.');
+      fetchDocuments();
+    } else {
+      Alert.alert('Błąd', 'Nie udało się przesłać dokumentu.');
+    }
+  }
+
+  async function askDocumentType(): Promise<DocumentType | null> {
+    return new Promise((resolve) => {
+      Alert.alert(
+        'Typ dokumentu',
+        'Wybierz typ przesyłanego dokumentu:',
+        [
+          { text: 'Rejestracyjny', onPress: () => resolve('REGISTRATION') },
+          { text: 'Zdjęcie', onPress: () => resolve('PHOTO') },
+          { text: 'Emisja spalin', onPress: () => resolve('EMISSION_CERTIFICATE') },
+          { text: 'Anuluj', style: 'cancel', onPress: () => resolve(null) },
+        ],
+        { cancelable: true }
+      );
+    });
+  }
 
   const renderDocumentsByType = (type: DocumentType, label: string) => {
     const filtered = documents.filter((doc) => doc.type === type);
@@ -145,6 +220,24 @@ export default function DocumentsScreen() {
             {renderDocumentsByType('EMISSION_CERTIFICATE', 'Certyfikat emisji spalin')}
           </>
         )}
+
+        <Button
+          mode="contained"
+          onPress={() =>
+            Alert.alert('Dodaj dokument', 'Wybierz źródło pliku', [
+              { text: 'Z aparatu', onPress: handleCameraUpload },
+              { text: 'Z plików', onPress: handleUpload },
+              { text: 'Anuluj', style: 'cancel' },
+            ])
+          }
+          style={{
+            marginTop: 16,
+            backgroundColor: theme.colors.primary,
+          }}
+          textColor={theme.colors.onPrimary}
+        >
+          Dodaj dokument
+        </Button>
       </ScrollView>
     </View>
   );
